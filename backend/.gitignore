@@ -1,0 +1,15 @@
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+edupulse_dev.db
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment files
+.env

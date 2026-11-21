@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: edupulse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: edupulse_user
+      POSTGRES_PASSWORD: edupulse_password
+      POSTGRES_DB: edupulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edupulse_user -d edupulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: edupulse-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://edupulse_user:edupulse_password@db:5432/edupulse
+      JWT_SECRET: super-secret-jwt-key-min-32-characters-long-edupulse-2026
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+      ENVIRONMENT: development
+      HOST: 0.0.0.0
+      PORT: 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:

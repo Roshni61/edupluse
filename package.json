@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "test:e2e": "playwright test",
+    "build": "npm --prefix frontend run build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.108.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}
