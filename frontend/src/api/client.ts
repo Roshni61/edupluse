@@ -3,11 +3,9 @@
  * Handles fetch requests, automatic Bearer token injection, and automatic token refresh on 401.
  */
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
-    ? `${window.location.origin}/api/v1`
-    : "http://127.0.0.1:8000/api/v1");
+import { API_BASE_URL } from "../config";
+
+const API_BASE = API_BASE_URL.endsWith("/api/v1") ? API_BASE_URL : `${API_BASE_URL}/api/v1`;
 
 interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
