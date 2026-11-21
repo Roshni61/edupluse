@@ -33,7 +33,7 @@ const ROLES: { id: Role; label: string }[] = [
   { id: "admin", label: "Admin" },
 ];
 
-const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true" || import.meta.env.DEV;
+const isDemoMode = import.meta.env.VITE_DEMO_MODE !== "false";
 
 function TopBar() {
   const { pathname } = useLocation();

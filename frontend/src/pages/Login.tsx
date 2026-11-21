@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lock, Mail, ArrowRight, GraduationCap, Sparkles, Users, ShieldCheck, AlertCircle } from "lucide-react";
+import { Lock, Mail, ArrowRight, GraduationCap, Sparkles, Users, ShieldCheck, AlertCircle, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useAuth, Role, DEMO_CREDENTIALS } from "../context/AuthContext";
 import { useStore } from "../store";
 import { useT } from "../i18n";
 import { Logo } from "../components/ui";
 
-const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true" || import.meta.env.DEV;
+const isDemoMode = import.meta.env.VITE_DEMO_MODE !== "false";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,8 +15,11 @@ export default function Login() {
   const { state, dispatch } = useStore();
   const t = useT();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Auto-fill teacher by default in demo mode
+  const [email, setEmail] = useState(() => (isDemoMode ? DEMO_CREDENTIALS.teacher.email : ""));
+  const [password, setPassword] = useState(() => (isDemoMode ? DEMO_CREDENTIALS.teacher.pass : ""));
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>("teacher");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,6 +31,14 @@ export default function Login() {
     } else {
       navigate(`/${role}`, { replace: true });
     }
+  };
+
+  const handleAutofill = (role: Role) => {
+    const creds = DEMO_CREDENTIALS[role];
+    setEmail(creds.email);
+    setPassword(creds.pass);
+    setSelectedRole(role);
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +57,7 @@ export default function Login() {
   };
 
   const handleQuickLogin = async (role: Role) => {
+    handleAutofill(role);
     setError(null);
     setIsSubmitting(true);
     try {
@@ -96,6 +108,38 @@ export default function Login() {
             </div>
           )}
 
+          {/* Auto-fill Selector Bar */}
+          {isDemoMode && (
+            <div className="mb-5 rounded-2xl border border-sage-2 bg-sage/60 p-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-ink-800">
+                  <Sparkles size={14} className="text-coral" />
+                  Auto-fill demo credentials:
+                </span>
+                <span className="text-[10px] font-semibold text-ink-500">1-click fill</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {(["teacher", "student", "parent", "admin"] as Role[]).map(r => {
+                  const isCurrent = email === DEMO_CREDENTIALS[r].email;
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleAutofill(r)}
+                      className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 text-xs font-bold transition capitalize ${
+                        isCurrent
+                          ? "bg-ink-800 text-white shadow-soft"
+                          : "border border-sage-2 bg-white text-ink-700 hover:bg-white/80"
+                      }`}
+                    >
+                      <span className="leading-tight">{r}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label" htmlFor="email">
@@ -107,7 +151,10 @@ export default function Login() {
                   type="email"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => {
+                    setEmail(e.target.value);
+                    setSelectedRole(null);
+                  }}
                   placeholder="teacher@edupulse.demo"
                   className="w-full rounded-2xl border border-sage-2 bg-white px-4 py-2.5 pl-10 text-sm font-medium outline-none transition focus:border-ink-800 focus:ring-2 focus:ring-ink-800/10"
                 />
@@ -116,20 +163,33 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="label" htmlFor="password">
-                {t("passwordLabel")}
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="label" htmlFor="password">
+                  {t("passwordLabel")}
+                </label>
+                {isDemoMode && (
+                  <span className="text-[11px] text-ink-500">Default: <code className="rounded bg-sage px-1 py-0.5 font-bold text-ink-800">Demo@1234</code></span>
+                )}
+              </div>
               <div className="relative mt-1">
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-2xl border border-sage-2 bg-white px-4 py-2.5 pl-10 text-sm font-medium outline-none transition focus:border-ink-800 focus:ring-2 focus:ring-ink-800/10"
+                  className="w-full rounded-2xl border border-sage-2 bg-white px-4 py-2.5 pl-10 pr-10 text-sm font-medium outline-none transition focus:border-ink-800 focus:ring-2 focus:ring-ink-800/10"
                 />
                 <Lock size={16} className="absolute left-3.5 top-3.5 text-ink-500" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3.5 top-3 text-ink-500 hover:text-ink-800"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
